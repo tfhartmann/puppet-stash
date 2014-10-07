@@ -4,6 +4,11 @@ require 'spec_helper_acceptance'
 describe 'stash', :unless => UNSUPPORTED_PLATFORMS.include?(fact('osfamily')) do
   it 'with defaults' do
     pp = <<-EOS
+      $jh = $osfamily ? {
+        'RedHat'  => '/usr/lib/jvm/java-1.7.0-openjdk.x86_64',
+        'Debian'  => '/usr/lib/jvm/java-7-openjdk-amd64',
+        default   => '/opt/java',
+      }
       if versioncmp($::puppetversion,'3.6.1') >= 0 {
         $allow_virtual_packages = hiera('allow_virtual_packages',false)
         Package {
@@ -19,8 +24,8 @@ describe 'stash', :unless => UNSUPPORTED_PLATFORMS.include?(fact('osfamily')) do
         distribution => 'jdk',
       } ->
       class { 'stash':
-        downloadURL => 'http://10.255.0.1:81/',
-        javahome    => '/usr/lib/jvm/java-1.7.0-openjdk.x86_64',
+        downloadURL => 'http://10.0.0.17:81/',
+        javahome    => $jh,
       }
       class { 'stash::gc': }
       class { 'stash::facts': }
@@ -34,7 +39,6 @@ describe 'stash', :unless => UNSUPPORTED_PLATFORMS.include?(fact('osfamily')) do
     sleep 120
     shell 'curl --connect-timeout 1 --retry 240 localhost:7990', :acceptable_exit_codes => [0,7]
     apply_manifest(pp, :catch_changes => true)
-
   end
 
   describe port(7990) do

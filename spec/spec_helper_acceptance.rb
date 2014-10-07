@@ -1,12 +1,18 @@
 #require 'minitest'
-require 'minitest/autorun'
-require 'beaker-rspec'
-require 'pry'
+#require 'minitest/autorun'
+#require 'beaker-rspec'
+#require 'pry'
+require 'beaker-rspec/spec_helper'
+require 'beaker-rspec/helpers/serverspec'
 
 hosts.each do |host|
-  # Install Puppet
-  install_package host, 'rubygems'
-  on host, 'gem install puppet --no-ri --no-rdoc'
+  on host, 'echo "Acquire::http::proxy \"http://10.0.0.17:3128\";" >> /etc/apt/apt.conf; exit 0'
+  on host, 'echo "Acquire::https::proxy \"http://10.0.0.17:3128\";" >> /etc/apt/apt.conf; exit 0'
+  on host, 'echo "proxy=http://10.0.0.17:3128" >> /etc/yum.conf; exit 0'
+  on host, 'rm -f /etc/yum/pluginconf.d/fastestmirror.conf; exit 0'
+  on host, "sed -i 's/^mirrorlist=/#mirrorlist=/g'  /etc/yum.repos.d/*; exit 0"
+  on host, "sed -i 's/#baseurl=/baseurl=/g' /etc/yum.repos.d/*; exit 0"
+  install_puppet
   on host, "mkdir -p #{host['distmoduledir']}"
 end
 
